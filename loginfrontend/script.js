@@ -142,8 +142,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* --------------------------------------------------------------------------
-     4. Form Validation & Submission
+     4. Form Validation, Error Handling & Supabase Auth Submission
      -------------------------------------------------------------------------- */
+  function showFormError(message) {
+    if (!formErrorAlert) return;
+    formErrorAlert.textContent = message;
+    formErrorAlert.style.display = 'flex';
+  }
+
+  function clearFormError() {
+    if (!formErrorAlert) return;
+    formErrorAlert.textContent = '';
+    formErrorAlert.style.display = 'none';
+  }
+
   function validateEmailOrUser(value) {
     return value.trim().length >= 3;
   }
@@ -156,18 +168,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (emailInput) {
     emailInput.addEventListener('input', () => {
       emailGroup.classList.remove('has-error');
+      clearFormError();
     });
   }
 
   if (passwordInput) {
     passwordInput.addEventListener('input', () => {
       passwordGroup.classList.remove('has-error');
+      clearFormError();
     });
   }
 
   if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      clearFormError();
 
       let isValid = true;
       const emailVal = emailInput.value.trim();
@@ -196,11 +211,34 @@ document.addEventListener('DOMContentLoaded', () => {
       submitLoginBtn.classList.add('loading');
       submitLoginBtn.disabled = true;
 
-      // Simulate Authentication API response
-      setTimeout(() => {
-        submitLoginBtn.classList.remove('loading');
-        submitLoginBtn.disabled = false;
+      try {
+        let result;
+        if (isSignUpMode) {
+          // 1) For Sign Up:
+          result = await supabase.auth.signUp({
+            email: emailVal,
+            password: passwordVal,
+          });
+        } else {
+          // 2) For Sign In:
+          result = await supabase.auth.signInWithPassword({
+            email: emailVal,
+            password: passwordVal,
+          });
+        }
 
+        const { data, error } = result;
+
+        if (error) {
+          // 4) Show small error message under the form
+          showFormError(error.message || 'Authentication failed. Please verify your credentials.');
+          showToast(error.message, 'warning');
+          submitLoginBtn.classList.remove('loading');
+          submitLoginBtn.disabled = false;
+          return;
+        }
+
+        // Remember Me persistence
         if (rememberMeCheckbox && rememberMeCheckbox.checked) {
           localStorage.setItem('zaro_remembered_email', emailVal);
         } else {
@@ -208,12 +246,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isSignUpMode) {
-          showToast(`🎉 Welcome to ZARO, ${emailVal}! Your account is ready.`, 'success');
-          toggleAuthMode(false);
+          showToast(`🎉 Account registered successfully!`, 'success');
         } else {
-          showToast(`✨ Welcome back, ${emailVal}! Login successful.`, 'success');
+          showToast(`✨ Welcome back, ${data?.user?.email || emailVal}! Login successful.`, 'success');
         }
-      }, 1200);
+
+        // 3) After successful login or signup: Redirect to Home page ("/")
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 700);
+
+      } catch (err) {
+        showFormError(err.message || 'An unexpected error occurred. Please try again.');
+        showToast('An error occurred during authentication.', 'warning');
+        submitLoginBtn.classList.remove('loading');
+        submitLoginBtn.disabled = false;
+      }
     });
   }
 
@@ -239,6 +287,9 @@ document.addEventListener('DOMContentLoaded', () => {
      -------------------------------------------------------------------------- */
   function toggleAuthMode(toSignUp) {
     isSignUpMode = toSignUp;
+    clearFormError();
+    emailGroup.classList.remove('has-error');
+    passwordGroup.classList.remove('has-error');
     const btnText = submitLoginBtn.querySelector('.btn-text');
 
     if (isSignUpMode) {
