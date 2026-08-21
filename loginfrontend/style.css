@@ -836,7 +836,7 @@ a {
   to { transform: rotate(360deg); }
 }
 
-/* Form-level Error Alert */
+/* Form-level Error & Info Alert */
 .form-error-alert {
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -856,6 +856,22 @@ a {
   content: '⚠️';
   font-size: 0.95rem;
   flex-shrink: 0;
+}
+
+.form-error-alert.info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.form-error-alert.info::before {
+  content: '📧';
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Sign Up Prompt */
