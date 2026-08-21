@@ -1,6 +1,7 @@
 /**
  * ZARO - Modern Auth & Showcase Interaction Script
  */
+import { supabase } from './src/supabaseClient.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const togglePasswordBtn = document.getElementById('togglePasswordBtn');
   const rememberMeCheckbox = document.getElementById('rememberMeCheckbox');
   const submitLoginBtn = document.getElementById('submitLoginBtn');
+  const formErrorAlert = document.getElementById('formErrorAlert');
   const googleLoginBtn = document.getElementById('googleLoginBtn');
   const welcomeTitle = document.getElementById('welcomeTitle');
   const welcomeSubtitle = document.getElementById('welcomeSubtitle');
