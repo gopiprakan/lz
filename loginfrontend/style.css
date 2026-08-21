@@ -836,6 +836,28 @@ a {
   to { transform: rotate(360deg); }
 }
 
+/* Form-level Error Alert */
+.form-error-alert {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: var(--radius-input);
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: shake 0.3s ease-in-out;
+}
+
+.form-error-alert::before {
+  content: '⚠️';
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
 /* Sign Up Prompt */
 .signup-prompt {
   text-align: center;
