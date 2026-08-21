@@ -142,16 +142,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* --------------------------------------------------------------------------
-     4. Form Validation, Error Handling & Supabase Auth Submission
+     4. Form Validation, Error/Info Alerts & Supabase Auth Submission
      -------------------------------------------------------------------------- */
   function showFormError(message) {
     if (!formErrorAlert) return;
+    formErrorAlert.classList.remove('info');
+    formErrorAlert.textContent = message;
+    formErrorAlert.style.display = 'flex';
+  }
+
+  function showFormInfo(message) {
+    if (!formErrorAlert) return;
+    formErrorAlert.classList.add('info');
     formErrorAlert.textContent = message;
     formErrorAlert.style.display = 'flex';
   }
 
   function clearFormError() {
     if (!formErrorAlert) return;
+    formErrorAlert.classList.remove('info');
     formErrorAlert.textContent = '';
     formErrorAlert.style.display = 'none';
   }
@@ -229,12 +238,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const { data, error } = result;
 
+        submitLoginBtn.classList.remove('loading');
+        submitLoginBtn.disabled = false;
+
         if (error) {
-          // 4) Show small error message under the form
+          // Show error message under the form
           showFormError(error.message || 'Authentication failed. Please verify your credentials.');
           showToast(error.message, 'warning');
-          submitLoginBtn.classList.remove('loading');
-          submitLoginBtn.disabled = false;
           return;
         }
 
@@ -246,15 +256,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isSignUpMode) {
-          showToast(`🎉 Account registered successfully!`, 'success');
+          // If session returned immediately (e.g. email confirmations disabled)
+          if (data?.session) {
+            showToast(`✨ Account ready! Welcome to ZARO.`, 'success');
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 700);
+          } else {
+            // Sign Up requirement: Just show: "Check your email and confirm your account before logging in."
+            const confirmMsg = "Check your email and confirm your account before logging in.";
+            showFormInfo(confirmMsg);
+            showToast(confirmMsg, 'info');
+          }
         } else {
-          showToast(`✨ Welcome back, ${data?.user?.email || emailVal}! Login successful.`, 'success');
+          // 2 & 3) For Sign In: Only redirect when a real session exists after login
+          if (data?.session) {
+            showToast(`✨ Welcome back, ${data.user?.email || emailVal}! Login successful.`, 'success');
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 700);
+          } else {
+            showFormError('No active session could be created. Please check your credentials or verify your email.');
+          }
         }
-
-        // 3) After successful login or signup: Redirect to Home page ("/")
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 700);
 
       } catch (err) {
         showFormError(err.message || 'An unexpected error occurred. Please try again.');
